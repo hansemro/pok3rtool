@@ -1,6 +1,7 @@
 #include "kbscan.h"
 #include "proto_pok3r.h"
 #include "proto_cykb.h"
+#include "proto_cm.h"
 
 #include <functional>
 
@@ -233,6 +234,8 @@ ZList<KBDevice> KBScan::open(){
                 iface = new ProtoPOK3R(ldev.dev.vid, ldev.dev.pid, ldev.dev.boot_pid, ldev.boot, ldev.hid);
             } else if(ldev.dev.type == PROTO_CYKB){
                 iface = new ProtoCYKB(ldev.dev.vid, ldev.dev.pid, ldev.dev.boot_pid, ldev.boot, ldev.hid, ldev.dev.fw_addr);
+            } else if(ldev.dev.type == PROTO_CM){
+                iface = new ProtoCM(ldev.dev.vid, ldev.dev.pid, ldev.dev.boot_pid, ldev.boot, ldev.hid, ldev.dev.fw_addr);
             } else {
                 ELOG("Unknown protocol");
                 continue;
