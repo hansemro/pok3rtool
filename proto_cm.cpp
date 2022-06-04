@@ -57,10 +57,10 @@ bool ProtoCM::isBuiltin(){
 }
 
 bool ProtoCM::rebootFirmware(bool reopen){
-    //if(!builtin){
-    //    LOG("In Firmware");
-    //    return true;
-    //}
+    if(!builtin){
+        //LOG("In Firmware");
+        return true;
+    }
 
     LOG("Reset to Firmware");
     if(!sendCmd(RESET, RESET_FW))
@@ -83,10 +83,10 @@ bool ProtoCM::rebootFirmware(bool reopen){
 }
 
 bool ProtoCM::rebootBootloader(bool reopen){
-    //if(builtin){
-    //    LOG("In Bootloader");
-    //    return true;
-    //}
+    if(builtin){
+        //LOG("In Bootloader");
+        return true;
+    }
 
     LOG("Reset to Bootloader");
     if(!sendCmd(RESET, RESET_BL))
