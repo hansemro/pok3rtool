@@ -5,7 +5,9 @@
 
 #define UPDATE_ERROR        0xaaff
 
-#define VER_ADDR            0x3000
+#define VER_ADDR_OFFSET     -0x400
+
+#define FLASH_LEN           0x20000
 
 #define WAIT_SLEEP          5
 
@@ -63,7 +65,7 @@ bool ProtoCM::rebootFirmware(bool reopen){
     }
 
     LOG("Reset to Firmware");
-    if(!sendCmd(RESET, RESET_FW))
+    if(!sendCmd(RESET_CMD, RESET_BOOT_SUBCMD))
         return false;
     close();
 
@@ -89,7 +91,7 @@ bool ProtoCM::rebootBootloader(bool reopen){
     }
 
     LOG("Reset to Bootloader");
-    if(!sendCmd(RESET, RESET_BL))
+    if(!sendCmd(RESET_CMD, RESET_BUILTIN_SUBCMD))
         return false;
     close();
 
@@ -109,50 +111,149 @@ bool ProtoCM::rebootBootloader(bool reopen){
 }
 
 bool ProtoCM::getInfo(){
-    // not implemented
-    return false;
+    ZBinary data;
+    if(!sendRecvCmd(UPDATE_START_CMD, 0, data))
+        return false;
+
+    RLOG(data.dumpBytes(4, 8));
+
+    zu32 a = data.readleu32();
+    zu16 fw_addr_ = data.readleu16();
+    zu16 page_size = data.readleu16();
+    zu16 e = data.readleu16() + 10;
+    zu16 f = data.readleu16() + 10;
+    zu32 ver_addr = data.readleu32();
+
+    LOG(ZString::ItoS((zu64)a, 16));
+    LOG("firmware address: 0x" << HEX(fw_addr_));
+    LOG("page size: 0x" << HEX(page_size));
+    LOG(e);
+    LOG(f);
+    LOG("version address: 0x" << HEX(ver_addr));
+
+    return true;
 }
 
 ZString ProtoCM::getVersion(){
     DLOG("getVersion");
 
     ZBinary data;
-    if(!sendRecvCmd(READ, READ_VER, data))
+    if(!sendRecvCmd(FLASH_CMD, FLASH_READ_VER_SUBCMD, data))
         return "ERROR";
     //RLOG(data.dumpBytes(3, 8));
 
     ZBinary tst;
-    tst.fill(0xFF, 60);
+    tst.fill(0xFF, 64);
+    if(data == tst)
+        return "CLEARED";
 
-    ZString ver;
-    if(data.getSub(4) == tst){
-        ver = "CLEARED";
-    } else {
-        data.seek(4);
-        zu32 len = MIN(data.readleu32(), 60U);
-        ver.parseUTF8(data.raw()+4, len);
-    }
+    data.rewind();
+    zu32 len = MIN(data.readleu32(), 64U);
+    ZString ver = ZString(data.raw() + 4, len);
     DLOG("version: " << ver);
 
     return ver;
 }
 
 KBStatus ProtoCM::clearVersion(){
-    return ERR_NOT_IMPLEMENTED;
+    DLOG("clearVersion");
+    if(!rebootBootloader())
+        return ERR_IO;
+
+    LOG("Clear Version");
+    if(!eraseFlash(fw_addr + VER_ADDR_OFFSET, fw_addr + VER_ADDR_OFFSET + 8))
+        return ERR_IO;
+
+    ZBinary bin;
+    if(!sendRecvCmd(FLASH_CMD, FLASH_READ_VER_SUBCMD, bin))
+        return ERR_IO;
+
+    ZBinary tst;
+    tst.fill(0xFF, 64);
+    if(bin != tst)
+        return ERR_IO;
+
+    return SUCCESS;
 }
 
 KBStatus ProtoCM::setVersion(ZString version){
-    return ERR_NOT_IMPLEMENTED;
+    DLOG("setVersion " << version);
+    auto status = clearVersion();
+    if(status != SUCCESS)
+        return status;
+
+    LOG("Writing Version: " << version);
+
+    ZBinary vdata;
+    zu64 vlen = version.size() + 4;
+    vdata.fill(0, vlen + (4 - (vlen % 4)));
+    vdata.writeleu32(version.size());
+    vdata.write(version.bytes(), version.size());
+
+    // write version
+    if(!writeFlash(fw_addr + VER_ADDR_OFFSET, vdata)){
+        LOG("write error");
+        return ERR_FAIL;
+    }
+
+    // check version
+    ZString nver = getVersion();
+
+    if(nver != version){
+        ELOG("failed to set version");
+        return ERR_FLASH;
+    }
+
+    return SUCCESS;
 }
 
 ZBinary ProtoCM::dumpFlash(){
-    // not implemented
-    return false;
+    DLOG("dumpFlash");
+    ZBinary dump;
+
+    zu32 cp = FLASH_LEN / 10;
+    int percent = 0;
+    RLOG(percent << "%...");
+    for(zu32 addr = 0; addr < FLASH_LEN; addr += 64){
+        if(!readFlash(addr, dump))
+            break;
+
+        if(addr >= cp){
+            percent += 10;
+            RLOG(percent << "%...");
+            cp += FLASH_LEN / 10;
+        }
+    }
+    RLOG("100%" << ZLog::NEWLN);
+
+    return dump;
 }
 
 bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
-    // not implemented
-    return false;
+    DLOG("writeFirmware");
+
+    // update reset
+    ZBinary tmp;
+    if(!sendRecvCmd(UPDATE_START_CMD, 0, tmp))
+        return false;
+
+    LOG("Erase...");
+    //if(!eraseFlash(fw_addr, fw_addr + fwbinin.size()))
+    //    return false;
+
+    ZThread::sleep(WAIT_SLEEP);
+
+    LOG("Write...");
+    if(!writeFlash(fw_addr, fwbinin))
+        return false;
+
+    LOG("Check...");
+    if(!checkFlash(fw_addr, fwbinin))
+        return false;
+
+    LOG("Flashed succesfully");
+
+    return true;
 }
 
 bool ProtoCM::eraseAndCheck(){
@@ -165,24 +266,73 @@ void ProtoCM::test(){
     return;
 }
 
-bool ProtoCM::eraseFlash(zu32 start, zu32 length){
-    // not implemented
-    return false;
+bool ProtoCM::eraseFlash(zu32 start, zu32 end){
+    DLOG("eraseFlash " << HEX(start) << " " << HEX(end));
+    // send command
+    ZBinary arg;
+    arg.writeleu32(start);
+    arg.writeleu32(end);
+    if(!sendCmd(ERASE_CMD, 8, arg))
+        return false;
+    return true;
 }
 
 bool ProtoCM::readFlash(zu32 addr, ZBinary &bin){
-    // not implemented
-    return false;
+    DLOG("readFlash " << HEX(addr));
+    // send command
+    ZBinary data;
+    data.writeleu32(addr);
+    data.writeleu32(addr + 63);
+    if(!sendRecvCmd(READ_CMD, READ_ADDR_SUBCMD, data))
+        return false;
+    bin.write(data);
+    return true;
 }
 
 bool ProtoCM::writeFlash(zu32 addr, ZBinary bin){
-    // not implemented
-    return false;
+    DLOG("writeFlash " << HEX(addr) << " " << bin.size());
+    if(!bin.size())
+        return false;
+    // send command
+    zu32 offset = 0;
+    while(!bin.atEnd()){
+        ZBinary chunk;
+        ZBinary arg;
+        bin.read(chunk, 52);
+        zu32 start = addr + offset;
+        zu32 end = start + chunk.size() - 1;
+        arg.writeleu32(start);
+        arg.writeleu32(end);
+        arg.write(chunk);
+        DLOG(__func__ << ": 0x" << HEX(start) << " 0x" << HEX(end));
+        if(!sendCmd(FLASH_CMD, FLASH_WRITE_SUBCMD, arg))
+            return false;
+        offset += chunk.size();
+    }
+    return true;
 }
 
-zu32 ProtoCM::crcFlash(zu32 addr, zu32 len){
-    // not implemented
-    return 0;
+bool ProtoCM::checkFlash(zu32 addr, ZBinary bin){
+    DLOG("checkFlash " << HEX(addr) << " " << bin.size());
+    if(!bin.size())
+        return false;
+    // send command
+    zu32 offset = 0;
+    while(!bin.atEnd()){
+        ZBinary chunk;
+        ZBinary arg;
+        bin.read(chunk, 52);
+        zu32 start = addr + offset;
+        zu32 end = start + chunk.size() - 1;
+        arg.writeleu32(start);
+        arg.writeleu32(end);
+        arg.write(chunk);
+        DLOG(__func__ << ": 0x" << HEX(start) << " 0x" << HEX(end));
+        if(!sendCmd(FLASH_CMD, FLASH_CHECK_SUBCMD, arg))
+            return false;
+        offset += chunk.size();
+    }
+    return true;
 }
 
 zu32 ProtoCM::baseFirmwareAddr() const {
@@ -190,7 +340,7 @@ zu32 ProtoCM::baseFirmwareAddr() const {
 }
 
 bool ProtoCM::sendCmd(zu8 cmd, zu8 a1, ZBinary data){
-    if(data.size() > 52){
+    if(data.size() > 60){
         ELOG("bad data size");
         return false;
     }
@@ -202,11 +352,17 @@ bool ProtoCM::sendCmd(zu8 cmd, zu8 a1, ZBinary data){
     packet.seek(4);
     packet.write(data);     // data
 
+    packet.seek(2);
+    zu16 crc = ZHash<ZBinary, ZHashBase::CRC16>(packet).hash();
+    packet.writeleu16(crc); // CRC
+
+    DLOG("send: CRC: 0x" << HEX(crc));
+
     DLOG("send:");
     DLOG(ZLog::RAW << packet.dumpBytes(4, 8));
 
     // Send packet
-    if(!dev->send(packet, (cmd == RESET ? true : false))){
+    if(!dev->send(packet, (cmd == RESET_CMD ? true : false))){
         ELOG("send error");
         return false;
     }
@@ -229,6 +385,7 @@ bool ProtoCM::recvCmd(ZBinary &data){
     DLOG("recv:");
     DLOG(ZLog::RAW << data.dumpBytes(4, 8));
 
+    data.rewind();
     return true;
 }
 

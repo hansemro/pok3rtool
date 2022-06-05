@@ -12,12 +12,30 @@ using namespace LibChaos;
 class ProtoCM : public ProtoQMK {
 public:
     enum pok3r_rgb_cmd {
-        RESET       = 0x4, //!< Reset command.
-        RESET_BL    = 1,    //!< Reset to bootloader.
-        RESET_FW    = 0,    //!< Reset to firmware.
+        ERASE_CMD               = 0,    //!< Erase pages of flash
+        ERASE_NOP               = 10,   //!< Cancel erase (untested)
 
-        READ        = 0x1, //!< Read command.
-        READ_VER    = 0x2,  //!< Read version string.
+        FLASH_CMD               = 1,    //!< Flash command
+        FLASH_CHECK_SUBCMD      = 0,    //!< Compare bytes in flash with sent bytes
+        FLASH_WRITE_SUBCMD      = 1,    //!< Write 52 bytes (untested)
+        FLASH_READ_VER_SUBCMD   = 2,    //!< Read version from flash
+
+        READ_CMD                = 0x12, //!< Read command
+        READ_UNK1_SUBCMD        = 0x0,
+        READ_UNK2_SUBCMD        = 0x1,
+        READ_VER1_SUBCMD        = 0x20, //!< Read version string
+        READ_VER2_SUBCMD        = 0x22, //!< Read version data
+        READ_ADDR_SUBCMD        = 0xff, //!< Patched command, read arbitrary address
+
+        UPDATE_START_CMD        = 3,    //!< Start update, get info (?)
+
+        RESET_CMD               = 4,    //!< Reset command
+        RESET_BOOT_SUBCMD       = 0,    //!< Reset to opposite firmware (main -> builtin, builtin -> main)
+        RESET_BUILTIN_SUBCMD    = 1,    //!< Reset to builtin firmware
+
+        RESET_ALT_CMD           = 0x11, //!< Alternative reset to builtin command
+        RESET_BOOT_ALT_CMD      = 0x1,  //!< Reset to firmware
+        RESET_BUILTIN_ALT_CMD   = 0x0,  //!< Reset to builtin firmware
     };
 
 public:
@@ -59,14 +77,13 @@ public:
     void test();
 
     //! Erase flash pages starting at \a start, ending on the page of \a end.
-    bool eraseFlash(zu32 start, zu32 length);
+    bool eraseFlash(zu32 start, zu32 end);
     //! Read 64 bytes at \a addr.
     bool readFlash(zu32 addr, ZBinary &bin);
     //! Write 52 bytes at \a addr.
     bool writeFlash(zu32 addr, ZBinary bin);
-
-    //! Get CRC of firmware.
-    zu32 crcFlash(zu32 addr, zu32 len);
+    //! Check 52 bytes at \a addr.
+    bool checkFlash(zu32 addr, ZBinary bin);
 
 private:
     zu32 baseFirmwareAddr() const;
