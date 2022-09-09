@@ -282,10 +282,9 @@ bool ProtoCM::readFlash(zu32 addr, ZBinary &bin){
     // send command
     ZBinary data;
     data.writeleu32(addr);
-    data.writeleu32(addr + 63);
     if(!sendRecvCmd(READ_CMD, READ_ADDR_SUBCMD, data))
         return false;
-    bin.write(data);
+    bin.write(data.raw() + 4, 60);
     return true;
 }
 
