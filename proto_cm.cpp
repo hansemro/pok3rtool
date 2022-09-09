@@ -3,11 +3,9 @@
 
 #define UPDATE_PKT_LEN      64
 
-#define UPDATE_ERROR        0xaaff
-
 #define VER_ADDR_OFFSET     -0x400
 
-#define FLASH_LEN           0x20000
+#define FLASH_LEN           0x10000
 
 #define WAIT_SLEEP          5
 
