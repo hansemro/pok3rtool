@@ -212,7 +212,7 @@ ZBinary ProtoCM::dumpFlash(){
     zu32 cp = FLASH_LEN / 10;
     int percent = 0;
     RLOG(percent << "%...");
-    for(zu32 addr = 0; addr < FLASH_LEN; addr += 64){
+    for(zu32 addr = 0; addr < FLASH_LEN - 60; addr += 60){
         if(!readFlash(addr, dump))
             break;
 
