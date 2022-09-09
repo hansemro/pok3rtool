@@ -1,4 +1,5 @@
 #include "proto_cm.h"
+#include "proto_pok3r.h"
 #include "zlog.h"
 
 #define UPDATE_PKT_LEN      64
@@ -230,23 +231,26 @@ ZBinary ProtoCM::dumpFlash(){
 bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
     DLOG("writeFirmware");
 
+    ZBinary fwbin = fwbinin;
+    encode_firmware(fwbin);
+
     // update reset
     ZBinary tmp;
     if(!sendRecvCmd(UPDATE_START_CMD, 0, tmp))
         return false;
 
     LOG("Erase...");
-    //if(!eraseFlash(fw_addr, fw_addr + fwbinin.size()))
-    //    return false;
+    if(!eraseFlash(fw_addr, fw_addr + fwbin.size()))
+        return false;
 
     ZThread::sleep(WAIT_SLEEP);
 
     LOG("Write...");
-    if(!writeFlash(fw_addr, fwbinin))
+    if(!writeFlash(fw_addr, fwbin))
         return false;
 
     LOG("Check...");
-    if(!checkFlash(fw_addr, fwbinin))
+    if(!checkFlash(fw_addr, fwbin))
         return false;
 
     LOG("Flashed succesfully");
@@ -393,13 +397,11 @@ bool ProtoCM::sendRecvCmd(zu8 cmd, zu8 a1, ZBinary &data){
 }
 
 void ProtoCM::decode_firmware(ZBinary &bin){
-    // not implemented
-    return;
+    ProtoPOK3R::decode_firmware(bin);
 }
 
 void ProtoCM::encode_firmware(ZBinary &bin){
-    // not implemented
-    return;
+    ProtoPOK3R::encode_firmware(bin);
 }
 
 void ProtoCM::info_section(ZBinary data){
