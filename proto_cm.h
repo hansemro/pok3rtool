@@ -17,7 +17,7 @@ public:
 
         FLASH_CMD               = 1,    //!< Flash command
         FLASH_CHECK_SUBCMD      = 0,    //!< Compare bytes in flash with sent bytes
-        FLASH_WRITE_SUBCMD      = 1,    //!< Write 52 bytes (untested)
+        FLASH_WRITE_SUBCMD      = 1,    //!< Write 52 bytes
         FLASH_READ_VER_SUBCMD   = 2,    //!< Read version from flash
 
         READ_CMD                = 0x12, //!< Read command
