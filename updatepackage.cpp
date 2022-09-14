@@ -85,6 +85,9 @@ const ZMap<zu64, PackType> packages = {
     // Mistel Freeboard MD200 (200)
     // Vortex Tester (200)
     { 0x58B42FF4B1C57C09,   MAAV102 },  // V1.01.02     md200/v112
+
+    // Cooler Master Masterkeys Pro L White
+    { 0x38cc849b2e54b6df,   MAAV102 },  // V1.08.00
 };
 
 const ZMap<PackType, decodeFunc> types = {

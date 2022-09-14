@@ -13,6 +13,7 @@
 #define INTERFACE_PROTOCOL_NONE 0
 
 #define HOLTEK_VID              0x04d9
+#define CM_VID                  0x2516
 
 #define BOOT_PID                0x1000
 
@@ -33,6 +34,8 @@
 #define TEX_YODA_II_PID         0x0163
 #define MISTEL_MD600_PID        0x0143
 #define MISTEL_MD200_PID        0x0200
+#define CM_PRO_L_WHITE_PID      0x0047
+#define CM_PRO_L_WHITE_BOOT_PID 0x0046
 
 #define FW_ADDR_2C00            0x2c00
 #define FW_ADDR_3200            0x3200
@@ -59,6 +62,7 @@ static const ZMap<DeviceType, DeviceInfo> known_devices = {
     { DEV_TEX_YODA_II,      { "tex/yoda",           "Tex Yoda II",              HOLTEK_VID, TEX_YODA_II_PID,    BOOT_PID | TEX_YODA_II_PID,     PROTO_CYKB,     FW_ADDR_3400 } },
     { DEV_MISTEL_MD600,     { "mistel/md600",       "Mistel Barocco MD600",     HOLTEK_VID, MISTEL_MD600_PID,   BOOT_PID | MISTEL_MD600_PID,    PROTO_CYKB,     FW_ADDR_3400 } },
     { DEV_MISTEL_MD200,     { "mistel/md200",       "Mistel Freeboard MD200",   HOLTEK_VID, MISTEL_MD200_PID,   BOOT_PID | MISTEL_MD200_PID,    PROTO_CYKB,     FW_ADDR_3400 } },
+    { DEV_CM_PRO_L_WHITE,   { "cm/prolwhite",       "MasterKeys Pro L White",   CM_VID,     CM_PRO_L_WHITE_PID, CM_PRO_L_WHITE_BOOT_PID,        PROTO_CYKB,     FW_ADDR_3200 } },
 };
 
 static ZMap<zu32, DeviceType> known_ids;
