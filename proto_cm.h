@@ -68,6 +68,7 @@ public:
     KBStatus setVersion(ZString version);
 
     //! Dump the contents of flash.
+    ZBinary dump(zu32 address, zu32 len);
     ZBinary dumpFlash();
     //! Update the firmware.
     bool writeFirmware(const ZBinary &fwbin);

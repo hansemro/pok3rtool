@@ -206,26 +206,39 @@ KBStatus ProtoCM::setVersion(ZString version){
     return SUCCESS;
 }
 
-ZBinary ProtoCM::dumpFlash(){
-    DLOG("dumpFlash");
+ZBinary ProtoCM::dump(zu32 address, zu32 len){
     ZBinary dump;
 
-    zu32 cp = FLASH_LEN / 10;
+    zu32 cp = len / 10;
     int percent = 0;
     RLOG(percent << "%...");
-    for(zu32 addr = 0; addr < FLASH_LEN - 60; addr += 60){
-        if(!readFlash(addr, dump))
+    zu32 addr_offset = 0;
+    for(; addr_offset < len - 60; addr_offset += 60){
+        if(!readFlash(address + addr_offset, dump))
             break;
 
-        if(addr >= cp){
+        if(addr_offset >= cp){
             percent += 10;
             RLOG(percent << "%...");
-            cp += FLASH_LEN / 10;
+            cp += len / 10;
         }
     }
+    zu32 overshoot = addr_offset + 60 - len;
+    if (addr_offset + 60 > len){
+        ZBinary tmp;
+        if(!readFlash(address + len - 60, tmp))
+            return dump;
+        dump.write(tmp.raw() + overshoot, 60 - overshoot);
+    }
+
     RLOG("100%" << ZLog::NEWLN);
 
     return dump;
+}
+
+ZBinary ProtoCM::dumpFlash(){
+    DLOG("dumpFlash");
+    return dump(0, FLASH_LEN);
 }
 
 bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
