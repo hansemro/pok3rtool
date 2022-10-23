@@ -11,7 +11,7 @@ using namespace LibChaos;
 
 class ProtoCM : public ProtoQMK {
 public:
-    enum pok3r_rgb_cmd {
+    enum cm_cmd {
         ERASE_CMD               = 0,    //!< Erase pages of flash
         ERASE_NOP               = 10,   //!< Cancel erase (untested)
 

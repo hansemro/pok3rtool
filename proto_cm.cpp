@@ -139,7 +139,6 @@ ZString ProtoCM::getVersion(){
     ZBinary data;
     if(!sendRecvCmd(FLASH_CMD, FLASH_READ_VER_SUBCMD, data))
         return "ERROR";
-    //RLOG(data.dumpBytes(3, 8));
 
     ZBinary tst;
     tst.fill(0xFF, 64);
