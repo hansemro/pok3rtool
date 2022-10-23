@@ -241,6 +241,13 @@ ZBinary ProtoCM::dump(zu32 address, zu32 len){
 ZBinary ProtoCM::dumpFlash(){
     DLOG("dumpFlash");
     return dump(0, FLASH_LEN);
+    //return dump(0x20000000, 0x4000);    // dump sram
+    //return dump(0x40080000, 0x310);     // dump FMC
+    //return dump(0xe000e000, 0xf04);     // dump NVIC
+    //return dump(0x40088000, 0x308);     // dump CKCU_RSTCU
+    //return dump(0x400b0000, 0x602c);    // dump GPIO
+    //return dump(0x40022000, 0x040);     // dump AFIO
+    //return dump(0x40044000, 0x040);     // dump SPI1
 }
 
 bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
