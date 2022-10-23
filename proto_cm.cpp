@@ -208,6 +208,9 @@ KBStatus ProtoCM::setVersion(ZString version){
 ZBinary ProtoCM::dump(zu32 address, zu32 len){
     ZBinary dump;
 
+    if (len < 0x40) {
+        len = 0x40;
+    }
     zu32 cp = len / 10;
     int percent = 0;
     RLOG(percent << "%...");
