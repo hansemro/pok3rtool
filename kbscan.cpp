@@ -39,6 +39,8 @@
 #define CM_PRO_S_RGB_BOOT_PID   0x003d
 #define CM_PRO_L_WHITE_PID      0x0047
 #define CM_PRO_L_WHITE_BOOT_PID 0x0046
+#define CM_PRO_M_WHITE_PID      0x0048
+#define CM_PRO_M_WHITE_BOOT_PID 0x0049
 
 #define FW_ADDR_2C00            0x2c00
 #define FW_ADDR_3200            0x3200
@@ -67,6 +69,7 @@ static const ZMap<DeviceType, DeviceInfo> known_devices = {
     { DEV_MISTEL_MD200,     { "mistel/md200",       "Mistel Freeboard MD200",   HOLTEK_VID, MISTEL_MD200_PID,   BOOT_PID | MISTEL_MD200_PID,    PROTO_CYKB,     FW_ADDR_3400 } },
     { DEV_CM_PRO_S_RGB,     { "cm/prosrgb",         "MasterKeys Pro S RGB",     CM_VID,     CM_PRO_S_RGB_PID,   CM_PRO_S_RGB_BOOT_PID,          PROTO_CM,       FW_ADDR_3400 } },
     { DEV_CM_PRO_L_WHITE,   { "cm/prolwhite",       "MasterKeys Pro L White",   CM_VID,     CM_PRO_L_WHITE_PID, CM_PRO_L_WHITE_BOOT_PID,        PROTO_CYKB,     FW_ADDR_3200 } },
+    { DEV_CM_PRO_M_WHITE,   { "cm/promwhite",       "MasterKeys Pro M White",   CM_VID,     CM_PRO_M_WHITE_PID, CM_PRO_M_WHITE_BOOT_PID,        PROTO_CYKB,     FW_ADDR_3200 } },
 };
 
 static ZMap<zu32, DeviceType> known_ids;

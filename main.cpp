@@ -77,6 +77,7 @@ const ZMap<ZString, DeviceType> devnames = {
 
     { "prosrgb",            DEV_CM_PRO_S_RGB },
     { "prolwhite",          DEV_CM_PRO_L_WHITE },
+    { "promwhite",          DEV_CM_PRO_M_WHITE },
 };
 
 // Functions

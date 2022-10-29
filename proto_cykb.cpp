@@ -252,30 +252,44 @@ KBStatus ProtoCYKB::setVersion(ZString version){
     return SUCCESS;
 }
 
-ZBinary ProtoCYKB::dumpFlash(){
+ZBinary ProtoCYKB::dump(zu32 address, zu32 len){
     ZBinary dump;
-    /*
-    for(zu16 i = 0; i < FLASH_LEN - 60; i += 60){
-        if(!readFlash(i, dump))
-            return dump;
-    }
-    */
+    RLOG("address: " << address << ZLog::NEWLN);
+    RLOG("len: " << len << ZLog::NEWLN);
 
-    // readable flash is not a multiple of 60,
-    // so read the last little bit for a full dump
-    /*
-    ZBinary tmp;
-    if(!readFlash(FLASH_LEN - 60, tmp))
-        return dump;
-    dump.write(tmp.raw() + 44, 16);
-    */
-
-    for(zu16 i = 0; i < FLASH_LEN - 60; i += 60){
-        if(!readFlash(i, dump))
-            return dump;
+    if (len < 0x40) {
+        len = 0x40;
     }
+
+    zu32 cp = len / 10;
+    int percent = 0;
+    RLOG(percent << "%...");
+    zu32 addr_offset = 0;
+    for (; addr_offset < len - 60; addr_offset += 60){
+        if(!readFlash(address + addr_offset, dump))
+            break;
+        if(addr_offset >= cp){
+            percent += 10;
+            RLOG(percent << "%...");
+            cp += len / 10;
+        }
+    }
+
+    zu32 overshoot = addr_offset + 60 - len;
+    if(addr_offset + 60 > len){
+        ZBinary tmp;
+        if(!readFlash(address + len - 60, tmp))
+            return dump;
+        dump.write(tmp.raw() + overshoot, 60 - overshoot);
+    }
+
+    RLOG("100%" << ZLog::NEWLN);
 
     return dump;
+}
+
+ZBinary ProtoCYKB::dumpFlash(){
+    return dump(0, FLASH_LEN);
 }
 
 bool ProtoCYKB::writeFirmware(const ZBinary &fwbinin){
