@@ -122,6 +122,10 @@ bool ProtoHoltek::getInfo(){
 
     // TODO Read Flash Security and Protection
 
+    // check status
+    zu32 count = getCmdStatus();
+    LOG("status: " << count);
+
     return true;
 }
 
@@ -189,6 +193,7 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
     if(!rebootBootloader(true))
         return false;
 
+#if 0
     // clear option bytes
     if(!eraseFlash(0x1ff00000, 0x1ff00400)){
         return false;
@@ -202,6 +207,7 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
             return false;
         }
     }
+#endif
 
     // erase pages
     if(!eraseFlash(0x0, 0xfbff)){ // HT32F1654
@@ -210,6 +216,12 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
     }
 
     ZThread::sleep(ERASE_SLEEP);
+
+    // check status
+    zu32 count;
+    do {
+        count = getCmdStatus();
+    } while(count < 1);
 
     // Write firmware
     LOG("Write...");
@@ -275,6 +287,12 @@ bool ProtoHoltek::writeFlash(zu32 addr, ZBinary bin){
     arg.write(bin);
     if(!sendCmd(FLASH_CMD, FLASH_WRITE_SUBCMD, arg))
         return false;
+
+    zu32 count;
+    do {
+        count = getCmdStatus();
+    } while (count < 1);
+
     return true;
 }
 
@@ -378,4 +396,26 @@ bool ProtoHoltek::sendRecvCmd(zu8 cmd, zu8 subcmd, ZBinary &data){
 
     data.rewind();
     return true;
+}
+
+zu32 ProtoHoltek::getCmdStatus(){
+    ZBinary data(64);
+    data.fill(0);
+    int rc = dev->xferControl(0xa1, 0x01, 0x100, 0, data);
+    if(rc < 0){
+        ELOG("xferControl error");
+    }
+
+    DLOG("status:");
+    DLOG(ZLog::RAW << data.dumpBytes(4, 8));
+
+    // count number of success entries in status buffer
+    zu32 count = 0;
+    for (int i = 0; i < 64; i++) {
+        data.seek(i);
+        zu8 val = data.readu8();
+        if (val == 0x4f) count++;
+        if (val == 0x0) break;
+    }
+    return count;
 }

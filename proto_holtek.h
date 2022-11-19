@@ -91,6 +91,8 @@ private:
     //! Send command and recv response.
     bool sendRecvCmd(zu8 cmd, zu8 subcmd, ZBinary &data);
 
+    zu32 getCmdStatus();
+
 private:
     bool builtin;
     bool debug;

@@ -121,6 +121,29 @@ int rawhid_send(hid_t *hid, const void *buf, int len, int timeout)
     }
 }
 
+//  rawhid_xfer_control - send and receive a control transfer
+//    Inputs:
+//	hid = device to transmit to
+//	bmRequest = request type
+//	bRequest = request
+//	wValue = value
+//	wIndex = Index
+//	buf = buffer containing packet to send
+//	len = number of bytes to transmit
+//	timeout = time to wait, in milliseconds
+//    Output:
+//	number of bytes sent, or -1 on error
+//
+int rawhid_xfer_control(hid_t *hid, unsigned char bmRequest, unsigned char bRequest, unsigned short wValue, unsigned short wIndex, void *buf, unsigned short wLength, int timeout)
+{
+    int rc;
+    if (!hid || !hid->open) return -1;
+    rc = libusb_control_transfer(hid->usb, bmRequest, bRequest, wValue, wIndex, (unsigned char *)buf, wLength, timeout);
+    if (rc == LIBUSB_ERROR_TIMEOUT) return 0;
+    if (rc < 0) return -1;
+    return rc;
+}
+
 struct hid_match {
     int max;
     int vid;

@@ -60,7 +60,7 @@ add_library(pok3rlib STATIC ${POK3RLIB_SOURCES})
 set_property(TARGET pok3rlib PROPERTY CXX_STANDARD 11)
 target_link_libraries(pok3rlib chaos-static rawhid nlohmann_json ${LIBUSB_1_LIBRARIES})
 #set_property(TARGET chaos-static PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(pok3rlib PRIVATE ${LIBUSB_1_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(pok3rlib PRIVATE ${LIBUSB_1_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(pok3rlib PRIVATE ${LIBUSB_1_DEFINITIONS})
 
 # Pok3rTool
