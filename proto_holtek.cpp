@@ -193,7 +193,7 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
     if(!rebootBootloader(true))
         return false;
 
-#if 0
+#if LIBCHAOS_PLATFORM == LIBCHAOS_LINUX
     // clear option bytes
     if(!eraseFlash(0x1ff00000, 0x1ff00400)){
         return false;
@@ -389,7 +389,7 @@ bool ProtoHoltek::sendRecvCmd(zu8 cmd, zu8 subcmd, ZBinary &data){
     DLOG("recv:");
     DLOG(ZLog::RAW << data.dumpBytes(4, 8));
 
-    if(data.size() != UPDATE_PKT_LEN){
+    if(data.size() < UPDATE_PKT_LEN){
         DLOG("bad recv size");
         return false;
     }
