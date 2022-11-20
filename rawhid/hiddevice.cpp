@@ -90,6 +90,9 @@ bool HIDDevice::recv(ZBinary &data){
 }
 
 int HIDDevice::xferControl(zu8 bmRequest, zu8 bRequest, zu16 wValue, zu16 wIndex, ZBinary &data){
+#if LIBCHAOS_PLATFORM == LIBCHAOS_PLATFORM_MACOSX
+    return -1;
+#else
     if(!isOpen())
         return -1;
     if(data.size() == 0)
@@ -105,6 +108,7 @@ int HIDDevice::xferControl(zu8 bmRequest, zu8 bRequest, zu16 wValue, zu16 wIndex
         return ret;
     }
     return ret;
+#endif
 }
 
 ZArray<ZPointer<HIDDevice> > HIDDevice::openAll(zu16 vid, zu16 pid, zu16 usage_page, zu16 usage){
