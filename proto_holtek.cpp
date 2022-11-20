@@ -8,7 +8,7 @@
 #define HT32F52352_FLASH_LEN    0x20000
 #define HT32F1654_FLASH_LEN     0x10000
 
-#define REBOOT_SLEEP            3
+#define REBOOT_SLEEP            5
 #define ERASE_SLEEP             5
 
 #define HEX(A) (ZString::ItoS((zu64)(A), 16))
