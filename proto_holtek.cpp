@@ -122,9 +122,11 @@ bool ProtoHoltek::getInfo(){
 
     // TODO Read Flash Security and Protection
 
+#if LIBCHAOS_PLATFORM != LIBCHAOS_PLATFORM_MACOSX
     // check status
     zu32 count = getCmdStatus();
     LOG("status: " << count);
+#endif
 
     return true;
 }
