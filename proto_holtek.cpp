@@ -193,19 +193,8 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
     if(!rebootBootloader(true))
         return false;
 
-    // erase pages
-    if(!eraseFlash(0x0, 0xfbff)){ // HT32F1654
-        ELOG("erase error");
-        return false;
-    }
-
-    ZThread::sleep(ERASE_SLEEP);
-
-    // check status
-    zu32 count;
-    do {
-        count = getCmdStatus();
-    } while(count < 1);
+    // clear status
+    getCmdStatus();
 
     // Write firmware
     LOG("Write...");
