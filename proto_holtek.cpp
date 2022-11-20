@@ -193,22 +193,6 @@ bool ProtoHoltek::writeFirmware(const ZBinary &fwbinin){
     if(!rebootBootloader(true))
         return false;
 
-#if LIBCHAOS_PLATFORM == LIBCHAOS_LINUX
-    // clear option bytes
-    if(!eraseFlash(0x1ff00000, 0x1ff00400)){
-        return false;
-    }
-    ZBinary ob(0x400);
-    ob.fill(0xff);
-    for(zu64 o = 0; o < 0x400; o += 52){
-        ZBinary packet;
-        ob.read(packet, 52);
-        if(!writeFlash(0x1ff00000 + o, packet)){
-            return false;
-        }
-    }
-#endif
-
     // erase pages
     if(!eraseFlash(0x0, 0xfbff)){ // HT32F1654
         ELOG("erase error");
