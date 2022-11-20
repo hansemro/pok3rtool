@@ -101,7 +101,7 @@ int HIDDevice::xferControl(zu8 bmRequest, zu8 bRequest, zu16 wValue, zu16 wIndex
         ret = rawhid_xfer_control(hid, bmRequest, bRequest, wValue, wIndex, data.raw(), data.size(), RECV_TIMEOUT);
     } while(ret == 0 && !clock.passedMs(RECV_TIMEOUT_MAX));
     if (ret < 0) {
-        ELOG("control recv error: " << ret << ": " << libusb_strerror(ret));
+        DLOG("control recv error: " << ret << ": " << libusb_strerror(ret));
         return ret;
     }
     return ret;

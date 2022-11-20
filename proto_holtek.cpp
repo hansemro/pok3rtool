@@ -403,7 +403,7 @@ zu32 ProtoHoltek::getCmdStatus(){
     data.fill(0);
     int rc = dev->xferControl(0xa1, 0x01, 0x100, 0, data);
     if(rc < 0){
-        ELOG("xferControl error");
+        DLOG("xferControl error");
     }
 
     DLOG("status:");
