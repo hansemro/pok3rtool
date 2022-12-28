@@ -5,10 +5,30 @@ PROJECT(rawhid)
 
 SET(SOURCES
     hid.h
-    hid_libusb.c
     hiddevice.h
     hiddevice.cpp
 )
+
+SET(FILES
+    hid_libusb.c
+    hid_WINDOWS.c
+)
+
+IF(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    SET(SOURCES ${SOURCES}
+        hid_WINDOWS.c
+    )
+ELSE()
+    SET(SOURCES ${SOURCES}
+        hid_libusb.c
+    )
+
+    SET(LIBUSB_1_FIND_REQUIRED TRUE)
+
+    INCLUDE(
+        ../FindLibUSB-1.0.cmake
+    )
+ENDIF()
 
 ### =================== CONFIG =================== ###
 
@@ -18,13 +38,7 @@ IF(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation REQUIRED)
 ENDIF()
 
-SET(LIBUSB_1_FIND_REQUIRED TRUE)
-
 ### =================== BUILD =================== ###
-
-INCLUDE(
-    ../FindLibUSB-1.0.cmake
-)
 
 ADD_LIBRARY(rawhid STATIC ${SOURCES})
 SET_PROPERTY(TARGET rawhid PROPERTY CXX_STANDARD 11)
@@ -40,9 +54,15 @@ IF(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     TARGET_LINK_LIBRARIES(rawhid PRIVATE ${IOKIT_LIBRARY} ${COREFOUNDATION_LIBRARY})
 ENDIF()
 
-# Linux/BSD/Windows/macOS
-TARGET_INCLUDE_DIRECTORIES(rawhid PRIVATE ${LIBUSB_1_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(rawhid PRIVATE ${LIBUSB_1_LIBRARIES})
+IF(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    # Windows
+    TARGET_LINK_LIBRARIES(rawhid PRIVATE hid setupapi)
+ELSE()
+    # Linux/BSD/macOS
+    TARGET_INCLUDE_DIRECTORIES(rawhid PRIVATE ${LIBUSB_1_INCLUDE_DIRS})
+    TARGET_LINK_LIBRARIES(rawhid PRIVATE ${LIBUSB_1_LIBRARIES})
+ENDIF()
+
 
 # install
 install(TARGETS rawhid DESTINATION lib)
