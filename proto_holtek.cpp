@@ -427,9 +427,9 @@ bool ProtoHoltek::sendRecvCmd(zu8 cmd, zu8 subcmd, ZBinary &data){
 zu32 ProtoHoltek::getCmdStatus(ZBinary &data){
     //ZBinary data(64);
     data.fill(0);
-    int rc = dev->xferControl(0xa1, 0x01, 0x100, 0, data);
+    int rc = dev->getReport(0, data);
     if(rc < 0){
-        DLOG("xferControl error");
+        DLOG("getReport error");
         return 0;
     }
 

@@ -99,7 +99,7 @@ bool HIDDevice::recv(ZBinary &data){
     return true;
 }
 
-int HIDDevice::xferControl(zu8 bmRequest, zu8 bRequest, zu16 wValue, zu16 wIndex, ZBinary &data){
+int HIDDevice::getReport(zu16 wIndex, ZBinary &data){
     if(!isOpen())
         return -1;
     if(data.size() == 0)
@@ -108,7 +108,7 @@ int HIDDevice::xferControl(zu8 bmRequest, zu8 bRequest, zu16 wValue, zu16 wIndex
     ZClock clock;
     int ret;
     do {
-        ret = rawhid_xfer_control(hid, bmRequest, bRequest, wValue, wIndex, data.raw(), data.size(), RECV_TIMEOUT);
+        ret = rawhid_get_report(hid, wIndex, data.raw(), data.size(), RECV_TIMEOUT);
     } while(ret == 0 && !clock.passedMs(RECV_TIMEOUT_MAX));
     if (ret < 0) {
 #if LIBCHAOS_PLATFORM == LIBCHAOS_PLATFORM_WINDOWS

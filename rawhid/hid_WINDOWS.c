@@ -5,7 +5,7 @@
  *  rawhid_open - open 1 or more devices
  *  rawhid_recv - receive a packet
  *  rawhid_send - send a packet
- *  rawhid_xfer_control - GET_REPORT control transfer
+ *  rawhid_get_report - GET_REPORT control transfer
  *  rawhid_close - close a device
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -159,20 +159,17 @@ return_error:
     return -1;
 }
 
-//  rawhid_xfer_control - GET_REPORT control transfer
+//  rawhid_get_report - GET_REPORT control transfer
 //    Inputs:
 //      hid = device to transmit to
-//      bmRequest = request type
-//      bRequest = request
-//      wValue = value
-//      wIndex = Index
+//      wIndex = interface number
 //      buf = buffer containing packet to send
 //      len = number of bytes to transmit (size of buf)
 //      timeout = time to wait, in milliseconds
 //    Output:
 //      number of bytes sent, or -1 on error
 //
-int rawhid_xfer_control(hid_t *hid, unsigned char bmRequest, unsigned char bRequest, unsigned short wValue, unsigned short wIndex, void *buf, unsigned short wLength, int timeout)
+int rawhid_get_report(hid_t *hid, unsigned short wIndex, void *buf, unsigned short wLength, int timeout)
 {
     uint8_t tmp[wLength + 1];
     BOOL res = HidD_GetInputReport(hid->handle, tmp, sizeof(tmp));
