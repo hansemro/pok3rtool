@@ -5,6 +5,7 @@
  *  rawhid_open - open 1 or more devices
  *  rawhid_recv - receive a packet
  *  rawhid_send - send a packet
+ *  rawhid_xfer_control - GET_REPORT control transfer
  *  rawhid_close - close a device
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -156,6 +157,32 @@ return_timeout:
 return_error:
     LeaveCriticalSection(&tx_mutex);
     return -1;
+}
+
+//  rawhid_xfer_control - GET_REPORT control transfer
+//    Inputs:
+//      hid = device to transmit to
+//      bmRequest = request type
+//      bRequest = request
+//      wValue = value
+//      wIndex = Index
+//      buf = buffer containing packet to send
+//      len = number of bytes to transmit (size of buf)
+//      timeout = time to wait, in milliseconds
+//    Output:
+//      number of bytes sent, or -1 on error
+//
+int rawhid_xfer_control(hid_t *hid, unsigned char bmRequest, unsigned char bRequest, unsigned short wValue, unsigned short wIndex, void *buf, unsigned short wLength, int timeout)
+{
+    uint8_t tmp[wLength + 1];
+    BOOL res = HidD_GetInputReport(hid->handle, tmp, sizeof(tmp));
+    if (!res) {
+        printf("HidD_GetInputReport error\n");
+        return -1;
+    }
+    // ignore extra first byte used for storing report ID
+    memcpy(buf, tmp + 1, (size_t)wLength);
+    return wLength;
 }
 
 //  rawhid_open - open a device
