@@ -27,6 +27,7 @@ enum DeviceType {
     DEV_MISTEL_MD600,   //!< Mistel Barocco MD600
     DEV_MISTEL_MD200,   //!< Mistel Freeboard MD200
     DEV_CM_PRO_S_RGB,   //!< Cooler Master MasterKeys Pro S RGB
+    DEV_CM_PRO_L_RGB,   //!< Cooler Master MasterKeys Pro L RGB
     DEV_CM_PRO_L_WHITE, //!< Cooler Master MasterKeys Pro L White
     DEV_CM_PRO_M_WHITE, //!< Cooler Master MasterKeys Pro M White
 
