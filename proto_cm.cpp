@@ -24,7 +24,7 @@ ProtoCM::ProtoCM(zu16 vid_, zu16 pid_, zu16 boot_pid_, bool builtin_, ZPointer<H
     vid(vid_), pid(pid_), boot_pid(boot_pid_),
     fw_addr(fw_addr_)
 {
-    //dev->setStream(true);
+
 }
 
 ProtoCM::~ProtoCM(){
@@ -111,7 +111,7 @@ bool ProtoCM::rebootBootloader(bool reopen){
 
 bool ProtoCM::getInfo(){
     ZBinary data;
-    if(!sendRecvCmd(UPDATE_START_CMD, 0, data))
+    if(!sendRecvCmd(INFO_CMD, 0, data))
         return false;
 
     RLOG(data.dumpBytes(4, 8));
@@ -258,7 +258,7 @@ bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
 
     // update reset
     ZBinary tmp;
-    if(!sendRecvCmd(UPDATE_START_CMD, 0, tmp))
+    if(!sendRecvCmd(INFO_CMD, 0, tmp))
         return false;
 
     LOG("Erase...");
@@ -426,7 +426,4 @@ void ProtoCM::encode_firmware(ZBinary &bin){
     ProtoPOK3R::encode_firmware(bin);
 }
 
-void ProtoCM::info_section(ZBinary data){
-    // not implemented
-    return;
 }

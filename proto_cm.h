@@ -27,7 +27,7 @@ public:
         READ_VER2_SUBCMD        = 0x22, //!< Read version data
         READ_ADDR_SUBCMD        = 0xff, //!< Patched command, read arbitrary address
 
-        UPDATE_START_CMD        = 3,    //!< Start update, get info (?)
+        INFO_CMD                = 3,    //!< Get info
 
         RESET_CMD               = 4,    //!< Reset command
         RESET_BOOT_SUBCMD       = 0,    //!< Reset to opposite firmware (main -> builtin, builtin -> main)
@@ -53,6 +53,7 @@ public:
     bool isOpen() const;
 
     bool isBuiltin();
+    bool isQMK() { return false; }
 
     //! Reset and re-open device.
     bool rebootFirmware(bool reopen = true);
@@ -98,8 +99,6 @@ private:
 public:
     static void decode_firmware(ZBinary &bin);
     static void encode_firmware(ZBinary &bin);
-
-    static void info_section(ZBinary data);
 
 private:
     bool builtin;
