@@ -367,7 +367,7 @@ bool ProtoCM::checkFlash(zu32 addr, ZBinary bin){
         count += 1;
         // delay
         ZThread::usleep(2000);
-        if(count == 30){
+        if(bin.size() <= 52 || count == 30){
             zu32 passed;
             zu32 failed;
             getCmdStatus(status, passed, failed);
