@@ -162,23 +162,26 @@ KBStatus ProtoCM::clearVersion(){
     if(!eraseFlash(fw_addr + VER_ADDR_OFFSET, fw_addr + VER_ADDR_OFFSET + 8))
         return ERR_IO;
 
-    ZBinary bin;
-    if(!sendRecvCmd(FLASH_CMD, FLASH_READ_VER_SUBCMD, bin))
-        return ERR_IO;
+    // clear status
+    ZBinary status(64);
+    dev->getReport(1, status);
 
+    // check version
     ZBinary tst;
-    tst.fill(0xFF, 64);
-    if(bin != tst)
+    tst.fill(0xFF, 8);
+    if(!checkFlash(fw_addr + VER_ADDR_OFFSET, tst)){
+        LOG("Clear version failed");
         return ERR_IO;
+    }
 
     return SUCCESS;
 }
 
 KBStatus ProtoCM::setVersion(ZString version){
     DLOG("setVersion " << version);
-    auto status = clearVersion();
-    if(status != SUCCESS)
-        return status;
+    auto ret = clearVersion();
+    if(ret != SUCCESS)
+        return ret;
 
     LOG("Writing Version: " << version);
 
@@ -194,11 +197,13 @@ KBStatus ProtoCM::setVersion(ZString version){
         return ERR_FAIL;
     }
 
-    // check version
-    ZString nver = getVersion();
+    // clear status
+    ZBinary status(64);
+    dev->getReport(1, status);
 
-    if(nver != version){
-        ELOG("failed to set version");
+    // check version
+    if(!checkFlash(fw_addr + VER_ADDR_OFFSET, vdata)){
+        LOG("check version error");
         return ERR_FLASH;
     }
 
@@ -271,6 +276,10 @@ bool ProtoCM::writeFirmware(const ZBinary &fwbinin){
     if(!writeFlash(fw_addr, fwbin))
         return false;
 
+    // clear status
+    ZBinary status(64);
+    dev->getReport(1, status);
+
     LOG("Check...");
     if(!checkFlash(fw_addr, fwbin))
         return false;
@@ -341,7 +350,9 @@ bool ProtoCM::checkFlash(zu32 addr, ZBinary bin){
         return false;
     // send command
     zu32 offset = 0;
+    zu32 count = 0;
     while(!bin.atEnd()){
+        ZBinary status(64);
         ZBinary chunk;
         ZBinary arg;
         bin.read(chunk, 52);
@@ -351,9 +362,24 @@ bool ProtoCM::checkFlash(zu32 addr, ZBinary bin){
         arg.writeleu32(end);
         arg.write(chunk);
         DLOG(__func__ << ": 0x" << HEX(start) << " 0x" << HEX(end));
-        if(!sendCmd(FLASH_CMD, FLASH_CHECK_SUBCMD, arg))
-            return false;
+        sendCmd(FLASH_CMD, FLASH_CHECK_SUBCMD, arg);
         offset += chunk.size();
+        count += 1;
+        // delay
+        ZThread::usleep(2000);
+        if(count == 30){
+            zu32 passed;
+            zu32 failed;
+            getCmdStatus(status, passed, failed);
+            if(failed > 0){
+                ELOG("checkFlash failed (" << failed << ")");
+                return false;
+            }
+            if(count != passed){
+                DLOG(__func__ << ": Command status mismatch: expected " << count << ", got " << passed);
+            }
+            count -= passed;
+        }
     }
     return true;
 }
@@ -426,4 +452,26 @@ void ProtoCM::encode_firmware(ZBinary &bin){
     ProtoPOK3R::encode_firmware(bin);
 }
 
+zu32 ProtoCM::getCmdStatus(ZBinary &data, zu32 &passed, zu32 &failed){
+    //ZBinary data(64);
+    data.fill(0);
+    int rc = dev->getReport(1, data);
+    if(rc < 0){
+        DLOG("getReport error");
+        return 0;
+    }
+
+    DLOG("status:");
+    DLOG(ZLog::RAW << data.dumpBytes(4, 8));
+
+    // count number of successful entries in status buffer
+    passed = 0;
+    failed = 0;
+    for (int i = 0; i < 64; i++) {
+        data.seek(i);
+        zu8 val = data.readu8();
+        if(val == 0x4f) passed++;
+        if(val == 0x46) failed++;
+    }
+    return passed + failed;
 }

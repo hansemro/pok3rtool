@@ -95,6 +95,8 @@ private:
     bool recvCmd(ZBinary &data);
     //! Send command and recv response.
     bool sendRecvCmd(zu8 cmd, zu8 a1, ZBinary &data);
+    //! Get number of successful and failed commands from status report
+    zu32 getCmdStatus(ZBinary &data, zu32 &passed, zu32 &failed);
 
 public:
     static void decode_firmware(ZBinary &bin);
